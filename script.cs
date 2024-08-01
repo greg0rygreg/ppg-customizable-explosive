@@ -18,7 +18,7 @@ namespace Mod
                     OriginalItem = ModAPI.FindSpawnable("Brick"), //item to derive from
                     NameOverride = "Customizable Explosive", //new item name with a suffix to assure it is globally unique
                     NameToOrderByOverride = "!Customizable Explosive",
-                    DescriptionOverride = "Explosive with custom properties that you must set before detonating.", //new item description
+                    DescriptionOverride = "Explosive with custom properties that you can set before detonating.", //new item description
                     CategoryOverride = ModAPI.FindCategory("Explosives"), //new item category
                     ThumbnailOverride = ModAPI.LoadSprite("customBombView.png"), //new item thumbnail (relative path)
                     AfterSpawn = (Instance) => //all code in the AfterSpawn delegate will be executed when the item is spawned
