@@ -29,12 +29,15 @@ namespace Mod
                         Instance.GetComponent<SpriteRenderer>().sprite = ModAPI.LoadSprite("why.png");
                         Instance.FixColliders();
                         var phys = Instance.GetComponent<PhysicalBehaviour>();
-                        phys.TrueInitialMass = 5f;
-                        phys.InitialMass = 5f;
-                        phys.rigidbody.mass = 5f;
+                        phys.TrueInitialMass = 2.5f;
+                        phys.InitialMass = 2.5f;
+                        phys.rigidbody.mass = 2.5f;
                         phys.Properties = ModAPI.FindPhysicalProperties("Metal");
                         Instance.AddComponent<cusBombBehaviour>();
                         Instance.AddComponent<cusBombSpriteBeh>();
+                        var bombBeh = Instance.GetComponent<cusBombBehaviour>();
+                        bombBeh.fragForce = 15;
+                        bombBeh.rang = 85;
                     }
                 }
             );
@@ -53,11 +56,15 @@ namespace Mod
                         Instance.GetComponent<SpriteRenderer>().sprite = ModAPI.LoadSprite("customBomb.png");
                         Instance.FixColliders();
                         var phys = Instance.GetComponent<PhysicalBehaviour>();
-                        phys.TrueInitialMass = 2.5f;
-                        phys.InitialMass = 2.5f;
-                        phys.rigidbody.mass = 2.5f;
+                        phys.TrueInitialMass = 0.602f;
+                        phys.InitialMass = 0.602f;
+                        phys.rigidbody.mass = 0.602f;
                         phys.Properties = ModAPI.FindPhysicalProperties("Soft");
                         Instance.AddComponent<cusBombBehaviour>();
+                        var bombBeh = Instance.GetComponent<cusBombBehaviour>();
+                        bombBeh.fragForce = 15;
+                        bombBeh.rang = 35;
+                        bombBeh.dismemberChance = 0f;
                     }
                 }
             );
