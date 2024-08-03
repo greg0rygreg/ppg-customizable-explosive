@@ -12,6 +12,8 @@ namespace Mod
         
         public static void Main()
         {
+            //funny
+            ModAPI.FindSpawnable("Fusion Bomb").Description = "A thermonuclear bomb. Second most powerful bomb available.";
             
             // register item to the mod api
             ModAPI.Register(
@@ -20,7 +22,7 @@ namespace Mod
                     OriginalItem = ModAPI.FindSpawnable("Brick"), //item to derive from
                     NameOverride = "Customizable Explosive", //new item name with a suffix to assure it is globally unique
                     NameToOrderByOverride = "!Customizable Explosive",
-                    DescriptionOverride = "General purpose bomb that has been reprogrammed to be as customizable as possible.", //new item description
+                    DescriptionOverride = "General purpose bomb that has been reprogrammed to be as customizable as possible. Explodes if heated for enough time.", //new item description
                     CategoryOverride = ModAPI.FindCategory("Explosives"), //new item category
                     ThumbnailOverride = ModAPI.LoadSprite("newerView.png"), //new item thumbnail (relative path)
                     AfterSpawn = (Instance) => //all code in the AfterSpawn delegate will be executed when the item is spawned
@@ -33,11 +35,19 @@ namespace Mod
                         phys.InitialMass = 2.5f;
                         phys.rigidbody.mass = 2.5f;
                         phys.Properties = ModAPI.FindPhysicalProperties("Metal");
-                        Instance.AddComponent<cusBombBehaviour>();
-                        Instance.AddComponent<cusBombSpriteBeh>();
+                        Instance.GetOrAddComponent<cusBombBehaviour>(); // this works ig
+                        Instance.GetOrAddComponent<cusBombSpriteBeh>();
                         var bombBeh = Instance.GetComponent<cusBombBehaviour>();
                         bombBeh.fragForce = 15;
                         bombBeh.rang = 85;
+                        bombBeh.explodeAtTemperature = 500;
+                        var spriteBeh = Instance.GetComponent<cusBombSpriteBeh>();
+                        List<Sprite> spriteList = new List<Sprite>
+                        {
+                            ModAPI.LoadSprite("why.png"),
+                            ModAPI.LoadSprite("why2.png")
+                        };
+                        spriteBeh.SetSprites(spriteList);
                     }
                 }
             );
@@ -45,26 +55,35 @@ namespace Mod
                 new Modification()
                 {
                     OriginalItem = ModAPI.FindSpawnable("Brick"), //item to derive from
-                    NameOverride = "Customizable Explosive (old sprite)", //new item name with a suffix to assure it is globally unique
+                    NameOverride = "Customizable Dynamite Pack", //new item name with a suffix to assure it is globally unique
                     NameToOrderByOverride = "!Customizable Explosive2",
-                    DescriptionOverride = "Like a customizable explosive, but with the old sprite", //new item description
+                    DescriptionOverride = "Pack of dynamites that have been somehow reprogrammed. Explodes less violently on default settings compared to the customizable explosive, and has a lower temperature tolerance before exploding.", //new item description
                     CategoryOverride = ModAPI.FindCategory("Explosives"), //new item category
-                    ThumbnailOverride = ModAPI.LoadSprite("customBombView.png"), //new item thumbnail (relative path)
+                    ThumbnailOverride = ModAPI.LoadSprite("newPackV.png"), //new item thumbnail (relative path)
                     AfterSpawn = (Instance) => //all code in the AfterSpawn delegate will be executed when the item is spawned
                     {
                         //get the SpriteRenderer and replace its sprite with a custom one
-                        Instance.GetComponent<SpriteRenderer>().sprite = ModAPI.LoadSprite("customBomb.png");
+                        Instance.GetComponent<SpriteRenderer>().sprite = ModAPI.LoadSprite("newPack.png");
                         Instance.FixColliders();
                         var phys = Instance.GetComponent<PhysicalBehaviour>();
                         phys.TrueInitialMass = 0.602f;
                         phys.InitialMass = 0.602f;
                         phys.rigidbody.mass = 0.602f;
                         phys.Properties = ModAPI.FindPhysicalProperties("Soft");
-                        Instance.AddComponent<cusBombBehaviour>();
+                        Instance.GetOrAddComponent<cusBombBehaviour>(); // this works ig
+                        Instance.GetOrAddComponent<cusBombSpriteBeh>();
                         var bombBeh = Instance.GetComponent<cusBombBehaviour>();
                         bombBeh.fragForce = 15;
                         bombBeh.rang = 35;
                         bombBeh.dismemberChance = 0f;
+                        bombBeh.explodeAtTemperature = 250;
+                        var spriteBeh = Instance.GetComponent<cusBombSpriteBeh>();
+                        List<Sprite> spriteList = new List<Sprite>
+                        {
+                            ModAPI.LoadSprite("newPack.png"),
+                            ModAPI.LoadSprite("newPack2.png")
+                        };
+                        spriteBeh.SetSprites(spriteList);
                     }
                 }
             );
@@ -77,10 +96,12 @@ namespace Mod
         public int rang = 10;
         public bool largeExplosion = true;
         public bool isIndustructable = false;
+
+        public float explodeAtTemperature = 150;
         private void Start()
         {
                         gameObject.AddComponent<UseEventTrigger>().Action = () => {
-                                ExplosionCreator.Explode(new ExplosionCreator.ExplosionParameters
+                                /*ExplosionCreator.Explode(new ExplosionCreator.ExplosionParameters
                                 {
                                     //Explosion center
                                     Position = transform.position,
@@ -102,7 +123,8 @@ namespace Mod
 
                                     //The ultimate range of the explosion
                                     Range = rang
-                                });
+                                });*/
+                                greg.explode(transform, true, largeExplosion, dismemberChance, fragForce, rang);
                                 if (dismemberChance == 0.42f && fragForce == 420 && rang == 42)
                                 {
                                     ModAPI.Notify("<color=green>WEED</color>");
@@ -218,30 +240,84 @@ namespace Mod
                             })
                         );
         }
+        private void Update()
+        {
+            if (GetComponent<PhysicalBehaviour>().Temperature >= explodeAtTemperature)
+            {
+                greg.explode(transform, true, largeExplosion, dismemberChance, fragForce, rang);
+                Destroy(gameObject);
+            }
+        }
     }
     public class cusBombSpriteBeh : MonoBehaviour
     {
         public SpriteRenderer spriteRenderer;
         private List<Sprite> sprites = new List<Sprite>();
-        private int currentSpriteIndex = 0;
+        public int currentSpriteIndex = 0;
+
         void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
-
-            sprites.Add(ModAPI.LoadSprite("why.png"));
-            sprites.Add(ModAPI.LoadSprite("why2.png"));
-
             StartCoroutine(spriteChange());
         }
+
+        // Method to set sprites from an external source
+        public void SetSprites(List<Sprite> newSprites)
+        {
+            if (newSprites == null || newSprites.Count == 0)
+            {
+                Debug.LogWarning("Sprite list is empty or null. Please provide a valid list of sprites.");
+                return;
+            }
+
+            sprites = newSprites;
+            currentSpriteIndex = 0;
+
+            // Optional: Immediately update the sprite to the first in the list
+            spriteRenderer.sprite = sprites[currentSpriteIndex];
+        }
+
         IEnumerator spriteChange()
         {
             while (true)
             {
-                currentSpriteIndex = (currentSpriteIndex + 1) % sprites.Count;
-                spriteRenderer.sprite = sprites[currentSpriteIndex];
+                if (sprites.Count > 0)
+                {
+                    currentSpriteIndex = (currentSpriteIndex + 1) % sprites.Count;
+                    spriteRenderer.sprite = sprites[currentSpriteIndex];
+                }
 
                 yield return new WaitForSeconds(0.5f);
             }
+        }
+    }
+    public static class greg
+    {
+        public static void explode(Transform pos, bool particles, bool large, float dismember, int frag, int range_) // does it really matter if i include frag raycount?
+        {
+            ExplosionCreator.Explode(new ExplosionCreator.ExplosionParameters
+            {
+                //Explosion center
+                Position = pos.position,
+
+                //Should particles be created and sound played? 
+                CreateParticlesAndSound = particles,
+
+                //Should the particles, if created, be that of a large explosion?
+                LargeExplosionParticles = large,
+                                    
+                //The chance that limbs are torn off (0 - 1, 1 meaning all limbs and 0 meaning none)
+                DismemberChance = dismember,
+
+                //The amount of force for each "fragment" of the explosion. 8 is a pretty powerful explosion. 2 is a regular explosion.
+                FragmentForce = frag,
+
+                //The amount of rays cast to simulate fragments. More rays is more lag but higher precision
+                FragmentationRayCount = 32,
+
+                //The ultimate range of the explosion
+                Range = range_
+            });
         }
     }
 }

@@ -1,7 +1,7 @@
 {
   "Name": "Customizable Explosive",
   "Author": "greg",
-  "Description": "A mod that allows the creation of a custom explosive. Try not to save or paste it, itll break the explosive.",
+  "Description": "A mod that adds 2 almost fully customizable explosives to the game.",
   "ModVersion": "1.0",
   "GameVersion": "1.27+",
   "ThumbnailPath": "thumb.png",
