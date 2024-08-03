@@ -6,5 +6,4 @@ a mod for people playground. it adds a customizable explosive
 some code was taken from the Smart Spawner mod
 
 ## todo
-- [ ]  fix the explosive having fucked up context menu options when pasted or spawned from a save
-- [x] ~~make the wires not have any collision~~ make a whole new sprite just to fix this one issue
+- [x]  fix the explosive having fucked up context menu options when pasted or spawned from a save
